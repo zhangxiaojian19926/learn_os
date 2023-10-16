@@ -1,3 +1,4 @@
+; MBR, 主引导扇区内存起始位置
 [org 0x7c00]
 
 ;设置文本模式为文本模式，清除屏幕
@@ -17,33 +18,24 @@ mov si, booting
 call print
 
 mov edi, 0x1000;读的目标内存
-mov ecx, 0;起始扇区
-mov bl, 1;扇区数量
+mov ecx, 2;起始扇区
+mov bl, 4;扇区数量
 call read_disk
 
-mov edi, 0x1000;写的目标内存
-mov ecx, 2;起始扇区
-mov bl, 1;扇区数量
-call write_disk
+cmp word [0x1000], 0x55aa;校验loader是否出错
+jnz error
 
-; bochs 魔数断点
-xchg bx, bx
+jmp 0:0x1002; 0表示代码段地址
+
+xchg bx, bx;魔数断点
+
+; mov edi, 0x1000;写的目标内存
+; mov ecx, 2;起始扇区
+; mov bl, 1;扇区数量
+; call write_disk
 
 ;阻塞
 jmp $
-
-; print
-print:
-    mov ah, 0x0e
-.next:
-    mov al, [si]
-    cmp al, 0
-    jz .done
-    int 0x10
-    inc si
-    jmp .next
-.done:
-    ret
 
 ; 读硬盘数据
 read_disk:
@@ -187,6 +179,27 @@ write_disk:
         add edi, 2
         loop .writew
     ret
+
+
+; print
+print:
+    mov ah, 0x0e
+.next:
+    mov al, [si]
+    cmp al, 0
+    jz .done
+    int 0x10
+    inc si
+    jmp .next
+.done:
+    ret
+
+error:
+    mov si, .msg
+    call print
+    hlt ;cpu停止
+    jmp $
+    .msg db "Booting Error!!!", 10, 13, 0
 
 ; 10->\n, 13->\r 
 booting:
