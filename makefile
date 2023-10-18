@@ -12,6 +12,7 @@ h16M.img: boot.bin loader.bin
 clean:
 	rm *.bin
 	yes | rm *.img
+	yes | rm *.img.lock
 
 
 .PHONY:bochs
