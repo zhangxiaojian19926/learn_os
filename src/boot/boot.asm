@@ -27,8 +27,6 @@ jnz error
 
 jmp 0:0x1002; 0表示代码段地址
 
-xchg bx, bx;魔数断点
-
 ; mov edi, 0x1000;写的目标内存
 ; mov ecx, 2;起始扇区
 ; mov bl, 1;扇区数量

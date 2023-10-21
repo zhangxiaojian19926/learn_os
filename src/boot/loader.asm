@@ -44,10 +44,6 @@ detect_memory:
     mov si, detecting
     call print
 
-    xchg bx, bx
-
-    mov byte [0xb8000], 'p'
-
     ; cx表示结构体数量
     mov cx, [ards_count]
     ; 结构体指针
@@ -66,7 +62,7 @@ prepare_protected_mode:
     or al, 0b10
     out 0x92, al
 
-    lgdt [gdt_ptr];加载gdt
+    lgdt [gdt_ptr];加载gdt，加载全局描述符
 
     ; 启动保护模式
     mov eax, cr0
@@ -117,11 +113,6 @@ protected_mode:
     ; 修改栈顶
     mov esp, 0x10000
 
-    ;保护模式直接操作内存
-    mov byte [0xb8000], 'p'
-
-    mov byte [0x200000], 'p'
-
 jmp $
 
 memory_base equ 0;内存开始位置，基地址位置
@@ -149,7 +140,7 @@ gdt_code:
     ;存在-dlp 0  代码 - 非依从 - 可读 - 没有被访问 
     db 0b_1_00_1_1_0_1_0
     ; 4k  - 32位 - 不是64位 - 段界限 16 ~19
-    db 0b_1_1_0_0_0000 | (memory_limit >> 16) & 0xf
+    db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf
     db (memory_base >> 24) & 0xff
 gdt_data:
     dw memory_limit & 0xffff;段界限的0-15
@@ -158,7 +149,7 @@ gdt_data:
     ;存在-dlp 0 -s  数据 - 向上 - 可写 - 没有被访问 
     db 0b_1_00_1_0_0_1_0
     ; 4k  - 32位 - 不是64位 - 段界限 16 ~19
-    db 0b_1_1_0_0_0000 | (memory_limit >> 16) & 0xf
+    db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf
     db (memory_base >> 24) & 0xff
 gdt_end:
 
