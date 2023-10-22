@@ -4,21 +4,39 @@ ROOT:=.
 
 ENTRYPOINT:=0x10000 #内核起始位置
 
+CFLAGS:=-m32 # 32位程序
+CFLAGS+=-fno-builtin # 不需要gcc 内置函数，使用自己编译的
+CFLAGS+=-nostdinc    # 不能使用c标准的头文件
+CFLAGS+=-fno-pic     # 不需要位置无关的代码，position independent code
+CFLAGS+=-fno-pie     # 不需要位置无关的可执行程序 position independent execuable
+CFLAGS+=-fno-stack-protector  #不需要栈保护
+CFLAGS+=$(strip ${CFLAGS})
+
+DEBUG:=-g
+INCLUDE:=-I$(SRC)/../include
+
 # 创建boot.bin文件
 $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f bin $< -o $@
 
+# 编译kernel_init
+$(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
+
 # 创建kernel文件
 $(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
 	$(shell mkdir -p $(dir $@))
-	nasm -f elf32 $< -o $@
+	nasm -f elf32  $(DEBUG) $< -o $@
 
 # 创建kernel.bin文件
-$(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o
+$(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
+							$(BUILD)/kernel/main.o 							
+
 	$(shell mkdir -p $(dir $@))
-	# $<表示所有以来文件 $@  目标文件，静态链接elf_i386的可执行文件
-	ld -m elf_i386 -static $< -o $@ -Ttext $(ENTRYPOINT) 
+	# $^ 表示所有依赖文件 $@  目标文件 静态链接elf_i386的可执行文件
+	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT) 
 
 # 创建system.bin文件
 $(BUILD)/kernel/system.bin: $(BUILD)/kernel/kernel.bin
@@ -52,3 +70,18 @@ clean:
 .PHONY:bochs
 bochs:$(BUILD)/img/h16M.img
 	sudo bochs -f $(BUILD)/bochsrc
+
+.PHONY:qemu
+qemu:$(BUILD)/img/h16M.img
+	sudo qemu-system-i386 \
+			-m 32M \
+			-boot c\
+			-hda $<
+
+.PHONY:qemug
+qemug:$(BUILD)/img/h16M.img
+	sudo qemu-system-i386 \
+		-s -S  \
+		-m 32M \
+		-boot c\
+		-hda $<
