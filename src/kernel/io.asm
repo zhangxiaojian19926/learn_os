@@ -27,7 +27,7 @@ outb:
     mov edx, [ebp + 8]; port
     mov eax, [ebp + 12];value
 
-    out dx, al; 将al中的8bit 输入到dx
+    out dx, al; 将al中的8bit 输出到dx对应的寄存器中
 
     jmp $+2  ;一点点延迟
     jmp $+2  ;一点点延迟
@@ -60,7 +60,7 @@ outw:
     mov edx, [ebp + 8]; port
     mov eax, [ebp + 12];value
 
-    out dx, ax; 将ax中的8bit 输入到dx
+    out dx, ax; 将ax中的8bit 输出到dx对应寄存器
 
     leave; 恢复栈帧
     ret
