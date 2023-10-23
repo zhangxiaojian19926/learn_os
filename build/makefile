@@ -12,27 +12,28 @@ CFLAGS+=-fno-pie     # 不需要位置无关的可执行程序 position independ
 CFLAGS+=-fno-stack-protector  #不需要栈保护
 CFLAGS+=$(strip ${CFLAGS})
 
-DEBUG:=-g
-INCLUDE:=-I$(SRC)/../include
+DEBUG:= -g
+INCLUDE:=-I../include/
 
 # 创建boot.bin文件
 $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 	$(shell mkdir -p $(dir $@))
-	nasm -f bin $< -o $@
+	nasm -f bin  $< -o $@
+
+# 创建kernel文件
+$(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
+	$(shell mkdir -p $(dir $@))
+	nasm -f elf32  $< $(DEBUG) -o $@
 
 # 编译kernel_init
 $(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
-# 创建kernel文件
-$(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
-	$(shell mkdir -p $(dir $@))
-	nasm -f elf32  $(DEBUG) $< -o $@
-
 # 创建kernel.bin文件
 $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
-							$(BUILD)/kernel/main.o 							
+							$(BUILD)/kernel/main.o 	\
+							$(BUILD)/kernel/io.o 							
 
 	$(shell mkdir -p $(dir $@))
 	# $^ 表示所有依赖文件 $@  目标文件 静态链接elf_i386的可执行文件
