@@ -1,29 +1,33 @@
 #include <onix/onix.h>
 #include <onix/types.h>
 #include <onix/io.h>
+#include <onix/string.h>
+#include <onix/console.h>
+#include <onix/stdarg.h>
 
-// CRT 地址寄存器 0x3D4
-// CRT 数据寄存器 0x3D5
-// CRT 光标位置 - 高位 0xE
-// CRT 光标位置 - 低位 0xF
+// char message[] = "hello zhangjiang!!!\b\n";
 
-#define CRT_ADDR_REG 0x3D4
-#define CRT_DATA_REG 0x3D5
+void test_arg(int cnt, ...)
+{
+    va_list args;
+    va_start(args, cnt);
 
-#define CRT_CURSOR_REG_H 0xE
-#define CRT_CURSOR_REG_L 0xF
+    int arg;
+    while (cnt--)
+    {
+        arg = va_arg(args, int);
+    }
+    va_end(args);    
+}
 
 void kernel_init()
 {
-    outb(CRT_ADDR_REG, CRT_CURSOR_REG_H);
-    u16 pos = inb(CRT_DATA_REG) << 8;
-    outb(CRT_ADDR_REG, CRT_CURSOR_REG_L);
-    pos |= inb(CRT_DATA_REG);//低高8位组成地址，屏幕每一行都是80个字节
+    // console_init();
 
-    outb(CRT_ADDR_REG, CRT_CURSOR_REG_H);
-    outb(CRT_DATA_REG, 0);// 改变光标高位置
-    outb(CRT_ADDR_REG, CRT_CURSOR_REG_L);
-    outb(CRT_DATA_REG, 0);// 改变光标低位置，写0xf
+    test_arg(5, 1, 0xaa, 5, 0x55, 10);
 
-    u8 data = inb(CRT_ADDR_REG);
+    // while (true)
+    // {
+    //     console_write(message, sizeof(message));
+    // }
 }

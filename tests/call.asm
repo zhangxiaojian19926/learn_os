@@ -9,14 +9,14 @@ test:
 
 global main
 main:
-    ; push 5
-    ; push eax
+    push 5
+    push eax
 
-    ; pop ebx
-    ; pop ecx
+    pop ebx
+    pop ecx
 
-    ; pusha
-    ; popa
+    pusha
+    popa
 
     call test
 
