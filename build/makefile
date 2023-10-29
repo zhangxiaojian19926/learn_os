@@ -25,6 +25,11 @@ $(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f elf32  $< $(DEBUG) -o $@
 
+# 编译lib
+$(BUILD)/lib/%.o: $(SRC)/../lib/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
+
 # 编译kernel_init
 $(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
 	$(shell mkdir -p $(dir $@))
@@ -33,7 +38,14 @@ $(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
 # 创建kernel.bin文件
 $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/kernel/main.o 	\
-							$(BUILD)/kernel/io.o 							
+							$(BUILD)/kernel/io.o 	\
+							$(BUILD)/kernel/console.o\
+							$(BUILD)/kernel/printk.o\
+							$(BUILD)/kernel/assert.o\
+							$(BUILD)/lib/string.o	\
+							$(BUILD)/lib/vsprintf.o	
+
+
 
 	$(shell mkdir -p $(dir $@))
 	# $^ 表示所有依赖文件 $@  目标文件 静态链接elf_i386的可执行文件
