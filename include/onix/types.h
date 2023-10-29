@@ -11,7 +11,7 @@
 #define true 1
 #define false 0
 
-#define _packed _attribute__((packed)) //
+#define _packed __attribute__((packed))
 
 typedef unsigned int size_t;
 
