@@ -8,12 +8,18 @@
 #include <onix/assert.h>
 #include <onix/debug.h>
 #include <onix/global.h>
+#include <onix/task.h>
+#include <onix/interrupt.h>
 
 void kernel_init()
 {
     console_init();
 
     gdt_init();
+
+    interrupt_init();// 中断初始化
+
+    // task_init();
 
     return;
 }
