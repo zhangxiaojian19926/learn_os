@@ -33,8 +33,10 @@ typedef struct selector_t
 // 全局描述符 表指针
 typedef struct  pointer_t
 {
-    u16 limit;
+    u16 limit; // pointer_t 大小限制
     u32 base;
 }_packed pointer_t;
+
+void gdt_init();
 
 #endif

@@ -6,6 +6,8 @@
 // 中断描述符表个数
 #define IDT_SIZE 256
 
+typedef void *handler_t; // 中断处理函数
+
 
 typedef struct gate_t
 {
