@@ -24,7 +24,7 @@ interrupt_entry:
     ;调用中断处理函数，handler_table存储的处理函数的指针
     call [handler_table + eax * 4]
     ; 对应调用 push %1 调用结束恢复栈
-    add esp, 8
+    add esp, 8; 除去压入栈的两个变量
     iret
 
 INTERRUPT_HANDLER 0x00, 0; divide by zero 除零异常
