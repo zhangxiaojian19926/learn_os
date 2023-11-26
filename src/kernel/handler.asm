@@ -19,11 +19,33 @@ interrupt_entry:
     
     xchg bx, bx
 
-    mov eax, [esp]
+    ; 保存上文寄存器
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
+
+    mov eax, [esp + 12 * 4]
+
+    ; 向中断函数传递参数
+    push eax
 
     ;调用中断处理函数，handler_table存储的处理函数的指针
     call [handler_table + eax * 4]
-    ; 对应调用 push %1 调用结束恢复栈
+
+    ; 对应push eax，调用结束恢复栈
+    add esp, 4
+
+    ; 保存上文寄存器
+    popa
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+    ; 对应push %1
+    ; 对应error code 或 push magic
     add esp, 8; 除去压入栈的两个变量
     iret
 

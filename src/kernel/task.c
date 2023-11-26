@@ -25,23 +25,26 @@ void schedule()
     task_switch(next);
 }
 
-u32 thread_a()
+u32 _ofp thread_a()
 {
+    asm volatile("sti\n");
+
     while (true)
     {
         /* code */
         printk("A");
-        schedule();
     }  
 }
 
-u32 thread_b()
+// 省去函数栈帧
+u32 _ofp  thread_b()
 {
+    asm volatile("sti\n");
+
     while (true)
     {
         /* code */
         printk("B");
-        schedule();
     }  
 }
 

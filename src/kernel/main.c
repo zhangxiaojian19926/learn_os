@@ -19,21 +19,8 @@ void kernel_init()
     gdt_init();
 
     interrupt_init();// 中断初始化
-
-    asm volatile(
-        "sti\n"
-        "movl %eax, %eax\n"
-    );
-
-    u32 counter = 0;
-    while (true)
-    {
-        /* code */
-        DEBUGK("looping in kernel init %d ...\n", counter++);
-        delay(100000000);
-    }
     
-    // task_init();
+    task_init();
 
     return;
 }
