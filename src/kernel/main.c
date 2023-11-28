@@ -20,7 +20,7 @@ void kernel_init()
 
     interrupt_init();// 中断初始化
     
-    task_init();
+    // task_init();
 
     return;
 }
