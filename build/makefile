@@ -97,7 +97,9 @@ qemu:$(BUILD)/img/h16M.img
 	sudo qemu-system-i386 \
 			-m 32M \
 			-boot c\
-			-hda $<
+			-drive file=$<,if=ide,index=0,media=disk,format=raw\
+			-audiodev id=alsa,driver=alsa \
+			-soundhw pcspk
 
 .PHONY:qemug
 qemug:$(BUILD)/img/h16M.img
@@ -105,4 +107,6 @@ qemug:$(BUILD)/img/h16M.img
 		-s -S  \
 		-m 32M \
 		-boot c\
-		-hda $<
+		-drive file=$<,if=ide,index=0,media=disk,format=raw\
+		-audiodev pa,id=hda \
+		# -machine pcspk-audiodev=hda

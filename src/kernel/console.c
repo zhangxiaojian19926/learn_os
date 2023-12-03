@@ -142,6 +142,8 @@ static void command_del()
     *(u16 *) pos = erase;
 }
 
+extern void start_beep();
+
 // 写控制台，将字符写入
 void console_write(char * buf, u32 count)
 {
@@ -163,6 +165,7 @@ void console_write(char * buf, u32 count)
                 
                 break;
             case BEL:  // \a
+                start_beep();
                 //to do
                 break;
             case BS :  // \b，退格键
