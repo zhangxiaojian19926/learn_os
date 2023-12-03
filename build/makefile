@@ -98,7 +98,8 @@ qemu:$(BUILD)/img/h16M.img
 	sudo qemu-system-i386 \
 			-m 32M \
 			-boot c\
-			-hda $<
+			-hda $< \
+			-rtc base=localtime \
 
 .PHONY:qemug
 qemug:$(BUILD)/img/h16M.img
@@ -106,4 +107,5 @@ qemug:$(BUILD)/img/h16M.img
 		-s -S  \
 		-m 32M \
 		-boot c\
-		-hda $<
+		-hda $< \
+		-rtc base=localtime \
