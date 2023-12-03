@@ -2,6 +2,7 @@
 #include <onix/interrupt.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
+#include <onix/rtc.h>
 
 #define PIT_CHAN0_REG 0x40
 #define PIT_CHAN2_REG 0x42 //用于输出不同音调的声音

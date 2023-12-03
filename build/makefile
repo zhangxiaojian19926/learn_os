@@ -50,6 +50,7 @@ $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/kernel/handler.o \
 							$(BUILD)/kernel/clock.o \
 							$(BUILD)/kernel/time.o \
+							$(BUILD)/kernel/rtc.o \
 							$(BUILD)/lib/string.o	\
 							$(BUILD)/lib/vsprintf.o \
 							$(BUILD)/lib/stdlib.o	
@@ -105,7 +106,7 @@ qemu:$(BUILD)/img/h16M.img
 
 .PHONY:qemug
 qemug:$(BUILD)/img/h16M.img
-	$(QEMU)
+	$(QEMU) -s -S
 
 $(BUILD)/img/h16M.vmdk:$(BUILD)/img/h16M.img
 	sudo qemu-img convert -O vmdk $< $@
