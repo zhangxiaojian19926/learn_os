@@ -93,19 +93,22 @@ clean:
 bochs:$(BUILD)/img/h16M.img
 	sudo bochs -f $(BUILD)/bochsrc
 
-.PHONY:qemu
-qemu:$(BUILD)/img/h16M.img
-	sudo qemu-system-i386 \
+QEMU:=sudo qemu-system-i386 \
 			-m 32M \
 			-boot c\
-			-hda $< \
+			-hda $(BUILD)/img/h16M.img \
 			-rtc base=localtime \
+
+.PHONY:qemu
+qemu:$(BUILD)/img/h16M.img
+	$(QEMU)
 
 .PHONY:qemug
 qemug:$(BUILD)/img/h16M.img
-	sudo qemu-system-i386 \
-		-s -S  \
-		-m 32M \
-		-boot c\
-		-hda $< \
-		-rtc base=localtime \
+	$(QEMU)
+
+$(BUILD)/img/h16M.vmdk:$(BUILD)/img/h16M.img
+	sudo qemu-img convert -O vmdk $< $@
+
+.PHONY:vmdk
+vmdk:$(BUILD)/img/h16M.img
