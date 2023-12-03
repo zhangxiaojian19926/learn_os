@@ -49,6 +49,7 @@ $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/kernel/interrupt.o\
 							$(BUILD)/kernel/handler.o \
 							$(BUILD)/kernel/clock.o \
+							$(BUILD)/kernel/time.o \
 							$(BUILD)/lib/string.o	\
 							$(BUILD)/lib/vsprintf.o \
 							$(BUILD)/lib/stdlib.o	
@@ -97,9 +98,7 @@ qemu:$(BUILD)/img/h16M.img
 	sudo qemu-system-i386 \
 			-m 32M \
 			-boot c\
-			-drive file=$<,if=ide,index=0,media=disk,format=raw\
-			-audiodev id=alsa,driver=alsa \
-			-soundhw pcspk
+			-hda $<
 
 .PHONY:qemug
 qemug:$(BUILD)/img/h16M.img
@@ -107,6 +106,4 @@ qemug:$(BUILD)/img/h16M.img
 		-s -S  \
 		-m 32M \
 		-boot c\
-		-drive file=$<,if=ide,index=0,media=disk,format=raw\
-		-audiodev pa,id=hda \
-		# -machine pcspk-audiodev=hda
+		-hda $<
