@@ -89,6 +89,7 @@ void set_interrupt_mask(u32 irq, bool enable)
 
     if (enable)
     {
+        // 先从port读入当前的中断掩码，之后再开启指定的外部中断
         outb(port, inb(port) & ~(1 << irq));
     }
     else
@@ -173,11 +174,13 @@ void idt_init()
         gate->present = 1;          // 有效
     }
 
+    // 前32个异常中断处理函数赋值 0x0 - 0x1f
     for (size_t i = 0; i < 0x20; i++)
     {
         handler_table[i] = exception_handler;
     }
 
+    // 外部中断赋值中断处理函数
     for (size_t i = 0x20; i < ENTRY_SIZE; i++)
     {
         handler_table[i] = default_handler;// 外中断默认处理函数
