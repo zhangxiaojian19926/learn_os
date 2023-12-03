@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "onix.h": "c",
+        "types.h": "c",
+        "strings.h": "c",
+        "string.h": "c",
+        "stdarg.h": "c",
+        "debug.h": "c",
+        "global.h": "c",
+        "interrupt.h": "c",
+        "assert.h": "c",
+        "time.h": "c"
+    }
+}
