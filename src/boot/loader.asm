@@ -8,7 +8,7 @@ mov si, loading
 call print
 call detect_memory
 
-; 内存检测，知道设备的那块内存能用，哪块内存不能使用
+; 内存检测，知道设备的哪块内存能用，哪块内存不能使用
 detect_memory:
     ;清空ebx
     xor ebx, ebx
@@ -35,8 +35,8 @@ detect_memory:
     ; 将缓存指针指向下一个结构体
     add di, cx
 
-    ;将结构体数量加1
-    inc word [ards_count]
+    ;将结构体数量加1，将16位改成了32位
+    inc dword [ards_count]
 
     cmp ebx, 0
     jnz .next
@@ -116,6 +116,9 @@ protected_mode:
     mov ecx, 10;起始扇区
     mov bl, 200;扇区数量
     call read_disk; 将内核读入硬盘
+
+    mov eax, 0x20231209 ; 内核魔数，为了兼容grub引导
+    mov ebx, ards_count ;ards 数量指针
 
     jmp dword code_selector:0x10000; 跳转内核执行
 
@@ -232,7 +235,7 @@ gdt_end:
 
 ;定义结构体数量
 ards_count:
-    dw 0
+    dd 0
 
 ;定义结构体
 ards_buffer:
