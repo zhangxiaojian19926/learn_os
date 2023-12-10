@@ -77,9 +77,20 @@ $(BUILD)/img/h16M.img: $(BUILD)/boot/boot.bin \
 					$(BUILD)/kernel/system.map\
 
 	$(shell mkdir -p $(dir $@))
-	cd $(BUILD)/img && echo "1\nhd\nflat\n512\n16\nh16M.img" | sudo bximage # 加上&& 才可以进入其他目录执行
+
+# 加上&& 才可以进入其他目录执行，创建一个16M的硬盘镜像
+	cd $(BUILD)/img && echo "1\nhd\nflat\n512\n16\nh16M.img" | sudo bximage 
+
+# 将boot.bin 写入主引导扇区
 	sudo dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
+
+# 将loader.bin 写入硬盘
 	sudo dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc 
+
+# # 测试system.bin 小于100k， 否则需要修改下面的count
+# 	test -n "$$(find $(BUILD)/system.bin -size -100k)"
+
+# 将system.bin 写入到硬盘中
 	sudo dd if=$(BUILD)/kernel/system.bin of=$@ bs=512 count=200 seek=10 conv=notrunc
 
 test:$(BUILD)/img/h16M.img
