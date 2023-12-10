@@ -5,19 +5,20 @@ extern void clock_init();
 extern void hang();
 extern void time_init();
 extern void rtc_init();
+extern void memory_test();
+extern void memory_map_init();
 
 void kernel_init()
 {
-    console_init();
 
-    gdt_init();
-
+    memory_map_init();
     interrupt_init();// 中断初始化
 
     // clock_init();
-    time_init();
+    // time_init();
+    // rtc_init();
 
-    rtc_init();
+    memory_test();
 
     asm volatile("sti");
     hang();
