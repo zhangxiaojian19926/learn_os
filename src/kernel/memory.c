@@ -161,7 +161,74 @@ void memory_test()
     {
         /* code */
         put_page(pages[i]);
+    }    
+}
+
+// 得到cr3寄存器
+u32 get_cr3()
+{
+    // 直接将 返回值在eax中
+    asm volatile("movl %cr3, %eax\n");
+}
+
+// 设置cr3 寄存器，参数是页目录的地址
+void set_cr3(u32 pde)
+{
+    ASSERT_PAGE(pde);
+    asm volatile("movl %%eax, %%cr3\n" :: "a"(pde));//"a"(pde) 在执行内嵌汇编指令时，将eax的值复制到pde中
+}
+
+// 打开分页机制，将cr0的最高位设置成1，开启分页机制
+static void enable_page()
+{
+    // 0b1000_000_000_000_000_0000_000_000
+    // 0x80000000
+    asm volatile(
+        "movl %cr0, %eax\n"
+        "orl $0x80000000, %eax\n"
+        "movl %eax, %cr0\n"
+        );
+}
+
+// 初始化页表项
+static void entry_init(page_entry_t *entry, u32 index)
+{
+    *(u32 *)entry = 0;
+    entry->present = 1;
+    entry->write = 1;
+    entry->user = 1;
+    entry->index = index;
+}
+
+// 内核页目录，4k大小
+#define KERNEL_PAGE_DIR 0x200000
+
+// 内核页表, 2M+4k的位置，表示页表所在位置，4k大小
+#define KERNEL_PAGE_ENTRY 0x201000
+
+// 初始化内存映射
+void mapping_init()
+{
+    page_entry_t *pde = (page_entry_t *) KERNEL_PAGE_DIR;//页目录地址赋值，首地址
+    memset(pde, 0, PAGE_SIZE);
+
+    entry_init(&pde[0], IDX(KERNEL_PAGE_ENTRY));// 页目录的页表型赋值，页表索引赋值
+
+    page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_ENTRY;//页表项初始化
+    page_entry_t *entry = NULL;
+
+    // 前1M的内存保存内核，所以也不能被映射出来
+    for (size_t tidx = 0; tidx < 1024; tidx++)
+    {
+        // 对每一个页表项进行初始化
+        entry = &pte[tidx];
+        entry_init(entry, tidx);
+        memory_map[tidx] = 1;
     }
-    
-    
+
+    // 设置cr3寄存器
+    set_cr3((u32)pde);
+
+    // 开启分页机制
+    enable_page();    
 }
