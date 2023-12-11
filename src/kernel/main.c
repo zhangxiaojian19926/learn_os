@@ -24,9 +24,7 @@ void kernel_init()
     // time_init();
     // rtc_init();
 
-    // 未映射的地址，触发缺页错误
-    char *ptr = (char *) (0x100000 * 20);// 访问2M的位置
-    ptr[0] = 'a';
+    memory_test();
 
     asm volatile("sti");
     hang();

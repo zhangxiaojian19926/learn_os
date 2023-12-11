@@ -12,7 +12,23 @@
 
 #define IDX(addr) ((u32)addr >> 12)  // 获取 addr 的页索引，去掉低12位，得到页索引
 #define PAGE(idx) ((u32)idx << 12)   // 获取页索引 idx 对应的页开始的位置
+#define DIDX(addr) (((u32)addr >> 22) & 0x3ff) // 获取 addr 的页目录索引，虚拟地址的前10位是页目录
+#define TIDX(addr) (((u32)addr >> 12) & 0x3ff) // 获取 addr 的页表索引，中间10位代表的是页表项
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
+
+// 内核页目录，4k大小
+#define KERNEL_PAGE_DIR 0x1000
+
+// // 内核页表, 2M+4k的位置，表示页表所在位置，4k大小
+// #define KERNEL_PAGE_ENTRY 0x201000
+
+#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
+
+// 内核页表索引，为保存内核，映射8M，需要2个页表
+static u32 KERNEL_PAGE_TABLE[] = {
+    0x2000,
+    0x3000,
+};
 
 typedef struct ards_t
 {
@@ -71,6 +87,13 @@ void memory_init(u32 magic, u32 addr)
 
     LOGK("Total pages %d\n", total_pages);
     LOGK("Free pages %d\n", free_pages);
+
+    if (memory_size < KERNEL_MEMORY_SIZE)
+    {
+        panic("System memory is %dM too small, at least %dM needed\n",
+            memory_size / MEMORY_BASE, KERNEL_MEMORY_SIZE / MEMORY_BASE);
+    }
+    
 }
 
 static u32 start_page = 0;   // 可分配物理内存起始位置
@@ -147,23 +170,6 @@ static void put_page(u32 addr)
     LOGK("PUT page 0x%p\n", addr);
 }
 
-void memory_test()
-{
-    u32 pages[10];
-
-    for (size_t i = 0; i < 10; i++)
-    {
-        /* code */
-        pages[i] = get_page();
-    }
-
-    for (size_t i = 0; i < 10; i++)
-    {
-        /* code */
-        put_page(pages[i]);
-    }    
-}
-
 // 得到cr3寄存器
 u32 get_cr3()
 {
@@ -179,7 +185,7 @@ void set_cr3(u32 pde)
 }
 
 // 打开分页机制，将cr0的最高位设置成1，开启分页机制
-static void enable_page()
+static _inline void enable_page()
 {
     // 0b1000_000_000_000_000_0000_000_000
     // 0x80000000
@@ -200,31 +206,42 @@ static void entry_init(page_entry_t *entry, u32 index)
     entry->index = index;
 }
 
-// 内核页目录，4k大小
-#define KERNEL_PAGE_DIR 0x200000
-
-// 内核页表, 2M+4k的位置，表示页表所在位置，4k大小
-#define KERNEL_PAGE_ENTRY 0x201000
-
 // 初始化内存映射
 void mapping_init()
 {
+    idx_t index = 0;
+
     page_entry_t *pde = (page_entry_t *) KERNEL_PAGE_DIR;//页目录地址赋值，首地址
     memset(pde, 0, PAGE_SIZE);
 
-    entry_init(&pde[0], IDX(KERNEL_PAGE_ENTRY));// 页目录的页表型赋值，页表索引赋值
-
-    page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_ENTRY;//页表项初始化
-    page_entry_t *entry = NULL;
-
-    // 前1M的内存保存内核，所以也不能被映射出来
-    for (size_t tidx = 0; tidx < 1024; tidx++)
+    // 对内存映射页进行初始化，内核使用2个页
+    for (idx_t didx = 0; didx < (sizeof(KERNEL_PAGE_TABLE) / 4);didx++)
     {
-        // 对每一个页表项进行初始化
-        entry = &pte[tidx];
-        entry_init(entry, tidx);
-        memory_map[tidx] = 1;
+        page_entry_t *pte = (page_entry_t *) KERNEL_PAGE_TABLE[didx];
+        memset(pte, 0, PAGE_SIZE);
+
+        page_entry_t *dentry = &pde[didx];
+        entry_init(dentry, IDX((u32)pte));//初始化页表项的属性
+
+        // 前1M的内存保存内核，所以也不能被映射出来
+        for (size_t tidx = 0; tidx < 1024; tidx++, index++)
+        {
+            // index 为0的页不映射，为空指针访问报出缺页异常，便于排查
+            if (0 == index)
+            {
+                continue;
+            }
+            
+            // 对内核使用的每一个页表项进行初始化
+            page_entry_t *tentry = &pte[tidx];
+            entry_init(tentry, index);
+            memory_map[index] = 1;
+        }
     }
+
+    // 将最后一个页表只想页目录自己，方便修改
+    page_entry_t *entry = &pde[1023];
+    entry_init(entry, IDX(KERNEL_PAGE_DIR));
 
     // 设置cr3寄存器
     set_cr3((u32)pde);
@@ -232,3 +249,52 @@ void mapping_init()
     // 开启分页机制
     enable_page();    
 }
+
+// 获取页目录地址
+static page_entry_t *get_pde()
+{
+    return (page_entry_t *)(0xfffff000);
+}
+
+// 获取页表项地址
+static page_entry_t *get_pte(u32 vaddr)
+{
+    return (page_entry_t *)((0xffc00000) | (DIDX(vaddr) << 12));
+}
+
+// 刷新指定虚拟地址 vaddr 的快表 TLB
+static void flush_tlb(u32 vaddr)
+{
+    asm volatile("invlpg (%0)" :: "r"(vaddr) 
+                 : "memory");
+}
+
+// void memory_test()
+// {
+//     // 将20M 0x1400000 内存映射到64M 0x4000000 的位置
+//     // 页表地址：0x900000
+
+//     BMB;
+
+//     u32 vaddr = 0x4000000; // 虚拟地址可以是任意值
+//     u32 paddr = 0x1400000; // 实际的物理地址，物理地址必须存在
+//     u32 table = 0x900000;  // 页表也必须是存在的物理地址
+
+//     page_entry_t *pde = get_pde();
+
+//     page_entry_t *dentry = &pde[DIDX(vaddr)];// 页目录中的一项
+//     entry_init(dentry, IDX(table));// 获取对应地址的页表目录
+
+//     page_entry_t *pte = get_pte(vaddr);
+//     page_entry_t *tentry = &pte[TIDX(vaddr)];
+
+//     entry_init(tentry, IDX(paddr));
+
+//     char *ptr = (char *)(0x4000000);
+//     ptr[0] = 'a';
+
+//     entry_init(tentry, IDX(0x1500000));
+//     flush_tlb(vaddr);
+
+//     BMB;    
+// }

@@ -16,7 +16,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerServerAddress": "172.29.117.86:1234",
+            "miDebuggerServerAddress": "172.29.60.32:1234",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
