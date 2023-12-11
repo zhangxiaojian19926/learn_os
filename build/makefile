@@ -104,7 +104,7 @@ clean:
 
 .PHONY:bochs
 bochs:$(BUILD)/img/h16M.img
-	sudo bochs -f $(BUILD)/bochsrc
+	sudo bochs -f $(BUILD)/bochsrc -unlock
 
 QEMU:=sudo qemu-system-i386 \
 			-m 32M \

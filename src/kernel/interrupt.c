@@ -189,8 +189,6 @@ void idt_init()
     idt_ptr.base = (u32)idt;
     idt_ptr.limit = sizeof(idt) - 1;
 
-    BMB;
-
     asm volatile(" lidt idt_ptr\n"); //加载 中断描述符表
     
 }
