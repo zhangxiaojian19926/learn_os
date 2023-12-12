@@ -1,3 +1,3 @@
 *.o
 ../src/kernel/*
-lib/*
+lib/*.o
