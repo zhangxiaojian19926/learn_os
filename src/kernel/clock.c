@@ -3,6 +3,7 @@
 #include <onix/assert.h>
 #include <onix/debug.h>
 #include <onix/rtc.h>
+#include <onix/task.h>
 
 #define PIT_CHAN0_REG 0x40
 #define PIT_CHAN2_REG 0x42 //用于输出不同音调的声音
@@ -46,17 +47,26 @@ void clock_handler(int vertor)
 {
     assert(vertor == 0x20);
     send_eoi(vertor);
-
-    if (jiffies % 200 == 0)
-    {
-        DEBUGK("clock jiffies %d\n", jiffies);
-        start_beep();
-    }
+    
+    stop_beep();
 
     jiffies++;
     // DEBUGK("clock jiffies %d\n", jiffies);
 
-    stop_beep();
+    task_t *task = running_task();
+    assert(task->magic == ONIX_MAGIC);
+
+    task->jiffies = jiffies;
+    task->ticks--;
+
+    // 剩余调度时间为零时，调度到另外一个线程的堆栈上
+    if (!task->ticks)
+    {
+        task->ticks = task->priority;
+        schedule();
+    }
+    
+
 }
 
 // 初始化时钟计数器,从CLOCK_COUNTER减到零，之后又从CLOCK_COUNTER开始见到零，周而复始
