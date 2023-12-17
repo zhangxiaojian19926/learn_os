@@ -3,8 +3,15 @@
 
 #include <onix/types.h>
 
-#define MEMORY_BASE 0x100000 // 1M可用内存的开始位置
-#define PAGE_SIZE 0x1000 // 一页的大小，4k
+#define MEMORY_BASE 0x100000   // 1M可用内存的开始位置
+#define PAGE_SIZE 0x1000       // 一页的大小，4k
+#define KERNEL_PAGE_DIR 0x1000 // 内核页目录，4k大小
+
+// 内核页表索引，为保存内核，映射8M，需要2个页表
+static u32 KERNEL_PAGE_TABLE[] = {
+    0x2000,
+    0x3000,
+};
 
 // 页目录的权限，低10位
 typedef struct page_entry_t

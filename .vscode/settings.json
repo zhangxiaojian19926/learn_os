@@ -9,6 +9,7 @@
         "global.h": "c",
         "interrupt.h": "c",
         "assert.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "memory.h": "c"
     }
 }

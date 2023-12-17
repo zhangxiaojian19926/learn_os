@@ -20,19 +20,10 @@
 // 内核页bit管理存放位置
 #define KERNEL_MAP_BITS 0x4000
 
-// 内核页目录，4k大小
-#define KERNEL_PAGE_DIR 0x1000
-
 // // 内核页表, 2M+4k的位置，表示页表所在位置，4k大小
 // #define KERNEL_PAGE_ENTRY 0x201000
 
 #define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
-
-// 内核页表索引，为保存内核，映射8M，需要2个页表
-static u32 KERNEL_PAGE_TABLE[] = {
-    0x2000,
-    0x3000,
-};
 
 bitmap_t kernel_map; // 内核map管理
 
