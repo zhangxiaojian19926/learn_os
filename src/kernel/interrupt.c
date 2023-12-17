@@ -193,6 +193,46 @@ void idt_init()
     
 }
 
+// 清除IF标志，返回设置前的值
+bool interrupt_disable()
+{
+    asm volatile(
+        "pushfl\n"          // 将当前 eflags 压入栈中
+        "cli\n"             // 清除IF位，此时外中断已经屏蔽
+        "popl %eax\n"       // 将eflags 弹出到eax
+        "shrl $9, %eax\n"   // 将eax 右移 9位，得到IF位
+        "andl $1, %eax\n"   // 只需要IF位
+    );
+}
+
+// 获取IF位，相比interrupt_disable少了cli
+bool get_interrupt_state()
+{
+    asm volatile(
+        "pushfl\n"          // 将当前 eflags压入栈中
+        "popl %eax\n"       // 将eflags 弹出到eax
+        "shrl $9, %eax\n"   // 将eax 右移 9位，得到IF位
+        "andl $1, %eax\n"   // 只需要IF位
+    );
+}
+
+// 设置IF位
+void set_interrupt_state(bool state)
+{
+    if (true == state)
+    {
+        asm volatile(
+            "sti\n" // 打开中断
+        );
+    }
+    else
+    {
+        asm volatile(
+            "cli\n" //关闭中断
+        );
+    }  
+}
+
 // 中断初始化
 void interrupt_init()
 {

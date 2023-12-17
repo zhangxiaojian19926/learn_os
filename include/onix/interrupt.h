@@ -52,4 +52,8 @@ void set_interrupt_handler(u32 irq, handler_t handler);
 // 设置中断的屏蔽字，动态调整中断屏蔽字，达到动态调整的状态
 void set_interrupt_mask(u32 irq, bool enable);
 
+bool interrupt_disable();// 关闭中断
+bool get_interrupt_state();// 获取当前中断标志
+void set_interrupt_state(bool state);// 设置当前IF标志
+
 #endif
