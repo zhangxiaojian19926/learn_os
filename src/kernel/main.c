@@ -16,6 +16,7 @@ extern void rtc_init();
 extern void memory_test();
 extern void memory_map_init();
 extern void mapping_init();
+extern void syscall_init();
 
 extern void bitmap_test_1();
 extern bool interrupt_disable();
@@ -31,12 +32,14 @@ void kernel_init()
     clock_init();
 
     task_init();
-    set_interrupt_state(true);
+    syscall_init();
+
+    // set_interrupt_state(true);
 
     // time_init();
     // rtc_init();
 
-    hang();
+    // hang()
 
     // return;
 }
