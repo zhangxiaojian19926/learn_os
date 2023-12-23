@@ -37,7 +37,7 @@ interrupt_entry:
     ; 对应push eax，调用结束恢复栈
     add esp, 4
 
-    ; 保存上文寄存器
+    ; 输出上文寄存器
     popa
     pop gs
     pop fs
