@@ -84,6 +84,12 @@ void schedule()
         current->state = TASK_READY; // 进程状态需要切换成就绪状态
     }
 
+    // 时钟周期变回初值，即优先级的概念
+    if(0 == current->ticks)
+    {
+        current->ticks = current->priority;
+    }
+
     next->state = TASK_RUNNING;
     if (next == current) // 当前运行的就是下一个进程则不用切换
     {
@@ -100,7 +106,7 @@ static task_t *task_create(target_t target, const char *task_name, u32 priority,
 
     u32 stack = (u32)task + PAGE_SIZE;
 
-    stack -= sizeof(task_frame_t);
+    stack -= sizeof(task_frame_t); // 将地址往前移20个字节
     task_frame_t *frame = (task_frame_t *)stack;
     frame->ebx = 0x11111111;
     frame->esi = 0x22222222;

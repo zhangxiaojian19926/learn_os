@@ -62,7 +62,6 @@ void clock_handler(int vertor)
     // 剩余调度时间为零时，调度到另外一个线程的堆栈上
     if (!task->ticks)
     {
-        task->ticks = task->priority;
         schedule();
     }
     
