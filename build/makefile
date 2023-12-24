@@ -56,7 +56,8 @@ $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/lib/string.o	\
 							$(BUILD)/lib/bitmap.o	\
 							$(BUILD)/lib/vsprintf.o \
-							$(BUILD)/lib/stdlib.o	
+							$(BUILD)/lib/stdlib.o	\
+							$(BUILD)/lib/syscall.o	
 
 
 

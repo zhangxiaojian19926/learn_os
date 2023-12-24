@@ -6,6 +6,7 @@
 #include <onix/interrupt.h>
 #include <onix/string.h>
 #include <onix/bitmap.h>
+#include <onix/syscall.h>
 
 #define PAGE_SIZE 0x1000    // 4k的页面
 #define NR_TASKS 64         // 最多64个线程
@@ -63,6 +64,11 @@ static task_t *task_search(task_state_t state)
     return task;
 }
 
+void task_yield()
+{
+    schedule();
+}
+
 task_t *running_task()
 {
     asm volatile(
@@ -73,6 +79,8 @@ task_t *running_task()
 
 void schedule()
 {
+    assert(!get_interrupt_state()); // 不可中断
+
     task_t *current = running_task();
     task_t *next = task_search(TASK_READY);
 
@@ -146,6 +154,7 @@ u32 _ofp thread_a()
     {
         /* code */
         printk("A");
+        yield();
     }  
 }
 
@@ -158,6 +167,7 @@ u32 _ofp  thread_b()
     {
         /* code */
         printk("B");
+        yield();
     }  
 }
 
@@ -170,6 +180,7 @@ u32 _ofp  thread_c()
     {
         /* code */
         printk("C");
+        yield();
     }  
 }
 
