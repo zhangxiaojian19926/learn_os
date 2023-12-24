@@ -15,9 +15,6 @@ handler_t handler_table[IDT_SIZE];
 extern handler_t handler_entry_table[ENTRY_SIZE];
 extern void syscall_handler();
 
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-// #define LOGK(fmt, args...)
-
 #define PIC_M_CTRL 0x20 // 主片的控制端口
 #define PIC_M_DATA 0x21 // 主片的数据端口
 #define PIC_S_CTRL 0xa0 // 从片的控制端口

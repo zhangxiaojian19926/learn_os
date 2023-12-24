@@ -120,8 +120,6 @@ int bitmap_scan(bitmap_t *map, u32 count)
 // bitmap 测试代码测试
 // #include <onix/debug.h>
 
-// #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-
 // #define LEN 2
 
 // u8 buf[LEN];

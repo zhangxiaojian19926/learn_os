@@ -6,8 +6,6 @@
 #include <onix/string.h>
 #include <onix/bitmap.h>
 
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-
 #define ZONE_VALID 1    // ards 可用内存区域
 #define ZONE_RESERVED 2 // ards 不可用区域
 

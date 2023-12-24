@@ -4,8 +4,6 @@
 #include <onix/interrupt.h>
 #include <onix/syscall.h>
 
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-
 #define SYSCALL_SIZE 64
 
 handler_t syscall_table[SYSCALL_SIZE]; // 最大有64个系统调用

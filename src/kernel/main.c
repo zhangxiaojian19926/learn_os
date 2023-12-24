@@ -3,8 +3,6 @@
 
 #include <onix/task.h>
 
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-
 extern void console_init();
 extern void gdt_init();
 extern void interrupt_init();// 中断初始化
@@ -23,6 +21,8 @@ extern bool interrupt_disable();
 extern bool get_interrupt_state();
 extern bool set_interrupt_state(bool state);
 
+extern void list_test();
+
 void kernel_init()
 {
     memory_map_init();
@@ -34,7 +34,9 @@ void kernel_init()
     task_init();
     syscall_init();
 
-    set_interrupt_state(true);
+    list_test();
+
+    // set_interrupt_state(true);
 
     // time_init();
     // rtc_init();

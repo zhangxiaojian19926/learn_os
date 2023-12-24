@@ -41,6 +41,6 @@ void set_cr3(u32 pde);
 u32 alloc_kpage(u32 count);
 
 // 释放count个连续的内核页
-void free_page(u32 vaddr, u32 count);
+void free_kpage(u32 vaddr, u32 count);
 
 #endif

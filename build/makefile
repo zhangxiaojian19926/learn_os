@@ -57,9 +57,8 @@ $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/lib/bitmap.o	\
 							$(BUILD)/lib/vsprintf.o \
 							$(BUILD)/lib/stdlib.o	\
-							$(BUILD)/lib/syscall.o	
-
-
+							$(BUILD)/lib/syscall.o	\
+							$(BUILD)/lib/list.o	
 
 	$(shell mkdir -p $(dir $@))
 	# $^ 表示所有依赖文件 $@  目标文件 静态链接elf_i386的可执行文件
