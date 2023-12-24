@@ -14,4 +14,6 @@ void debugk(char *file, int line, const char *fmt, ...);
 // ##args的意思，就是把args...中的多个参数，串连起来。
 #define DEBUGK(fmt, args...) debugk(__BASE_FILE__, __LINE__, fmt, ##args)
 
+#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
+
 #endif
