@@ -9,10 +9,11 @@
 #include <onix/syscall.h>
 #include <onix/list.h>
 
-#define PAGE_SIZE 0x1000    // 4k的页面
-#define NR_TASKS 64         // 最多64个线程
+#define PAGE_SIZE 0x1000             // 4k的页面
+#define NR_TASKS 64                  // 最多64个线程
 static task_t *task_table[NR_TASKS]; // 任务表
-static list_t block_list; // 任务默认阻塞表
+static list_t block_list;            // 任务默认阻塞表
+static task_t *idel_task;            // 空闲任务
 
 extern bitmap_t kernel_map;
 extern void task_switch(task_t *next);
@@ -63,6 +64,12 @@ static task_t *task_search(task_state_t state)
         }  
     }
 
+    // 空闲任务切换
+    if (NULL == task && TASK_READY == state)
+    {
+        task = idel_task;
+    }
+    
     return task;
 }
 
@@ -86,18 +93,8 @@ void schedule()
     task_t *current = running_task();
     task_t *next = task_search(TASK_READY); // 找到一个就绪的任务
 
-    // next 为空时，就不用切换，运行当前线程
-    if (NULL == next)
-    {
-        /* code */
-        LOGK("kkkkkkkkkkkk\n");
-        return;
-    }
-    else
-    {
-        assert(next != NULL);
-        assert(next->magic == ONIX_MAGIC);  
-    }
+    assert(next != NULL);
+    assert(next->magic == ONIX_MAGIC);  
 
     if (TASK_RUNNING == current->state)
     {
@@ -194,51 +191,14 @@ static void task_setup()
     memset(task_table, 0, sizeof(task_table));
 }
 
-u32 _ofp thread_a()
-{
-    set_interrupt_state(true);
-
-    while (true)
-    {
-        /* code */
-        printk("A");
-        test();
-    }  
-}
-
-// 省去函数栈帧
-u32 _ofp  thread_b()
-{
-    set_interrupt_state(true);
-
-    while (true)
-    {
-        /* code */
-        printk("B");
-        test();
-    }  
-}
-
-// 省去函数栈帧
-u32 _ofp  thread_c()
-{
-    set_interrupt_state(true);
-
-    while (true)
-    {
-        /* code */
-        printk("C");
-        test();
-    }  
-}
-
+extern void idle_thread();
+extern void init_thread();
 
 void task_init()
 {
     list_init(&block_list);
     task_setup();
 
-    task_create(thread_a, "a", 5, KERNEL_USER); // 创建内核内核线程
-    task_create(thread_b, "b", 5, KERNEL_USER);
-    // task_create(thread_c, "c", 5, KERNEL_USER);
+    idel_task = task_create(idle_thread, "idle", 1, KERNEL_USER);
+    task_create(init_thread, "init", 5, NORMAL_USER);// 用户层线程
 }
