@@ -7,10 +7,12 @@
 #include <onix/string.h>
 #include <onix/bitmap.h>
 #include <onix/syscall.h>
+#include <onix/list.h>
 
 #define PAGE_SIZE 0x1000    // 4k的页面
 #define NR_TASKS 64         // 最多64个线程
-static task_t *task_table[NR_TASKS];
+static task_t *task_table[NR_TASKS]; // 任务表
+static list_t block_list; // 任务默认阻塞表
 
 extern bitmap_t kernel_map;
 extern void task_switch(task_t *next);
@@ -22,7 +24,7 @@ task_t *get_free_task()
     {
         if (NULL == task_table[i])
         {
-            task_table[i] = (task_t *)alloc_kpage(1); // 需要free_page(1)
+            task_table[i] = (task_t *)alloc_kpage(1); // 需要free_kpage(1)
             return task_table[i];// 返回任务的全局地址
         }
     }
@@ -82,10 +84,20 @@ void schedule()
     assert(!get_interrupt_state()); // 不可中断
 
     task_t *current = running_task();
-    task_t *next = task_search(TASK_READY);
+    task_t *next = task_search(TASK_READY); // 找到一个就绪的任务
 
-    assert(next != NULL);
-    assert(next->magic == ONIX_MAGIC);
+    // next 为空时，就不用切换，运行当前线程
+    if (NULL == next)
+    {
+        /* code */
+        LOGK("kkkkkkkkkkkk\n");
+        return;
+    }
+    else
+    {
+        assert(next != NULL);
+        assert(next->magic == ONIX_MAGIC);  
+    }
 
     if (TASK_RUNNING == current->state)
     {
@@ -137,6 +149,42 @@ static task_t *task_create(target_t target, const char *task_name, u32 priority,
     return task;
 }
 
+// 任务枷锁与解锁过程
+void task_block(task_t *task, list_t *blist, task_state_t state)
+{
+    assert(!get_interrupt_state());
+    assert(task->node.next == NULL);
+    assert(task->node.prev == NULL);
+
+    if (NULL == blist)
+    {
+        blist = &block_list;
+    }
+
+    list_push(blist, &task->node);
+    assert(state != TASK_READY && state != TASK_RUNNING); // 需要阻塞的任务不能是正在准备或运行的任务
+
+    task->state = state;
+
+    task_t *current = running_task();
+    if(current == task)
+    {
+        schedule();
+    } 
+}
+
+void task_unblock(task_t *task)
+{
+    assert(!get_interrupt_state());
+
+    list_remove(&task->node);
+
+    assert(task->node.next == NULL);
+    assert(task->node.prev == NULL);
+
+    task->state = TASK_READY;
+}
+
 static void task_setup()
 {
     task_t *task = running_task();
@@ -154,7 +202,7 @@ u32 _ofp thread_a()
     {
         /* code */
         printk("A");
-        yield();
+        test();
     }  
 }
 
@@ -167,7 +215,7 @@ u32 _ofp  thread_b()
     {
         /* code */
         printk("B");
-        yield();
+        test();
     }  
 }
 
@@ -180,16 +228,17 @@ u32 _ofp  thread_c()
     {
         /* code */
         printk("C");
-        yield();
+        test();
     }  
 }
 
 
 void task_init()
 {
+    list_init(&block_list);
     task_setup();
 
-    task_create(thread_a, "a", 5, KERNEL_USER);
+    task_create(thread_a, "a", 5, KERNEL_USER); // 创建内核内核线程
     task_create(thread_b, "b", 5, KERNEL_USER);
-    task_create(thread_c, "c", 5, KERNEL_USER);
+    // task_create(thread_c, "c", 5, KERNEL_USER);
 }

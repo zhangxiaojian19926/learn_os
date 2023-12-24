@@ -1,3 +1,11 @@
 *.o
 ../src/kernel/*
 lib/*.o
+note/*/*.*.bkp
+note/*/*.*.dtmp
+build/kernel/*
+build/boot/*
+build/img/*
+
+
+

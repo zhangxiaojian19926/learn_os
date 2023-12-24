@@ -11,6 +11,8 @@
         "assert.h": "c",
         "time.h": "c",
         "memory.h": "c",
-        "syscall.h": "c"
+        "syscall.h": "c",
+        "list.h": "c",
+        "task.h": "c"
     }
 }
