@@ -244,7 +244,7 @@ void mapping_init()
     page_entry_t *entry = &pde[1023];
     entry_init(entry, IDX(KERNEL_PAGE_DIR));
 
-    // 设置cr3寄存器
+    // 设置cr3寄存器，页目录寄存器
     set_cr3((u32)pde);
 
     // 开启分页机制

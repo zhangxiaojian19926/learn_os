@@ -3,6 +3,7 @@
 
 #include <onix/types.h>
 #include <onix/bitmap.h>
+#include <onix/list.h>
 
 #define KERNEL_USER 0
 #define NORMAL_USER 1
@@ -19,8 +20,8 @@ typedef enum task_state_t
     TASK_RUNNING,  // 执行
     TASK_READY,    // 就绪
     TASK_BLOCKED,  // 阻塞
-    TASK_SLEEPING, // 睡眠
-    TASK_WAITING,  // 等待
+    TASK_SLEEPING, // 睡眠 阻塞的细分
+    TASK_WAITING,  // 等待 阻塞的细分
     TASK_DIED,     // 死亡
 } task_state_t;
 
@@ -28,6 +29,7 @@ typedef enum task_state_t
 typedef struct task_t
 {
     u32 *stack;             // 内核栈
+    list_node_t node;       // 任务阻塞节点 
     task_state_t state;     // 任务状态
     u32 priority;           // 任务优先级
     u32 ticks;              // 剩余时间片
@@ -56,6 +58,10 @@ task_t *running_task(); // 获取运行任务的栈信息
 void schedule(); // 任务调度接口
 
 void task_yield(); // 主动让出cpu
+
+// 任务枷锁与解锁过程
+void task_block(task_t *task, list_t *blist, task_state_t state);
+void task_unblock(task_t *task);
 
 
 #endif

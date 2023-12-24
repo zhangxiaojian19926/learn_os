@@ -3,6 +3,7 @@
 #include <onix/types.h>
 #include <onix/interrupt.h>
 #include <onix/syscall.h>
+#include <onix/task.h>
 
 #define SYSCALL_SIZE 64
 
@@ -22,9 +23,25 @@ static void syscall_default()
     panic("syscall not implemented!\n");
 }
 
+task_t *task = NULL;
+
 static u32 sys_test()
 {
-    LOGK("syscall test.....\n");
+    // LOGK("syscall test.....\n");
+    if (!task)
+    {
+        /* code */
+        task = running_task();
+        // LOGK("block task 0x%p \n", task);
+        task_block(task, NULL, TASK_BLOCKED);
+    }
+    else
+    {
+        task_unblock(task);
+        // LOGK("unblock task 0x%p \n", task);
+        task = NULL;
+    }
+    
     return 255;
 }
 

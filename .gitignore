@@ -1,5 +1,8 @@
 *.o
 ../src/kernel/*
 lib/*.o
-build/*
-
+note/*/*.*.bkp
+note/*/*.*.dtmp
+build/kernel/*
+build/boot/*
+build/img/*
