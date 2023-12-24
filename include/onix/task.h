@@ -55,5 +55,7 @@ void task_init(); // 任务初始化地址
 task_t *running_task(); // 获取运行任务的栈信息
 void schedule(); // 任务调度接口
 
+void task_yield(); // 主动让出cpu
+
 
 #endif
