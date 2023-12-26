@@ -129,7 +129,7 @@ static task_t *task_create(target_t target, const char *task_name, u32 priority,
     frame->esi = 0x22222222;
     frame->edi = 0x33333333;
     frame->ebp = 0x44444444;
-    frame->eip = (void *)target;
+    frame->eip = (void *)target; // 函数地址
 
     strcpy((char *)task->name, task_name);
 
