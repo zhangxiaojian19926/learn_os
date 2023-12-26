@@ -29,6 +29,6 @@ void init_thread()
     while (true)
     {
         LOGK("init task...\n");
-        test();//进行进程阻塞，当前进程被阻塞之后就要调用空闲进程
+        // test();//进行进程阻塞，当前进程被阻塞之后就要调用空闲进程
     }
 }
