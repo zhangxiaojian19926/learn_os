@@ -2,6 +2,7 @@
 #include <onix/syscall.h>
 #include <onix/debug.h>
 #include <onix/types.h>
+#include <onix/mutex.h>
 
 // 0号线程
 void idle_thread() 
@@ -21,17 +22,20 @@ void idle_thread()
     }
 }
 
+mutex_t mutex;
+
 // 1号线程
 void init_thread()
 {
+    mutex_init(&mutex);
     set_interrupt_state(true);
     u32 counter = 0;
 
     while (true)
     {
+        mutex_lock(&mutex);
         LOGK("init task... %d\n", counter++);
-        sleep(500);
-        // test();//进行进程阻塞，当前进程被阻塞之后就要调用空闲进程
+        mutex_unlock(&mutex);
     }
 }
 
@@ -42,8 +46,8 @@ void test_thread()
 
     while (true)
     {
+        mutex_lock(&mutex);
         LOGK("test task... %d\n", counter++);
-        sleep(700);
-        // test();//进行进程阻塞，当前进程被阻塞之后就要调用空闲进程
+        mutex_unlock(&mutex);
     }  
 }
