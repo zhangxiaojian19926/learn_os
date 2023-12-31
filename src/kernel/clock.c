@@ -43,12 +43,15 @@ void stop_beep()
     }
 }
 
+extern void task_wakeup();
+
 void clock_handler(int vertor)
 {
     assert(vertor == 0x20);
     send_eoi(vertor);
     
     stop_beep();
+    task_wakeup();// 唤醒睡眠结束的任务
 
     jiffies++;
     // DEBUGK("clock jiffies %d\n", jiffies);
