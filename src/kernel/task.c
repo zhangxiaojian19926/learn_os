@@ -13,7 +13,11 @@
 #define NR_TASKS 64                  // 最多64个线程
 static task_t *task_table[NR_TASKS]; // 任务表
 static list_t block_list;            // 任务默认阻塞表
+static list_t sleep_list;            // 任务默认阻塞表
 static task_t *idel_task;            // 空闲任务
+
+extern u32 volatile jiffies;// 当前时间片个数
+extern u32 jiffy;// 一个时间片的毫秒值
 
 extern bitmap_t kernel_map;
 extern void task_switch(task_t *next);
@@ -191,14 +195,85 @@ static void task_setup()
     memset(task_table, 0, sizeof(task_table));
 }
 
+void task_sleep(u32 ms)
+{
+    assert(!get_interrupt_state()); // 不可中断
+
+    u32 ticks = ms / jiffy; //需要多少个时间片
+    ticks = ticks > 0 ? ticks : 1; //至少一个时间片的休眠
+
+    // 记录目标全局时间片，在指定时刻唤醒线程
+    task_t *current = running_task();
+    current->ticks = jiffies + ticks;// 当前线程应该到哪个时间开始被唤醒
+
+    // 从睡眠链表中找到第一个比当前任务唤醒时间点更晚的任务，进行插入排序
+    list_t *list = &sleep_list;
+    list_node_t *anchor = &list->tail;
+
+    for (list_node_t *ptr = list->head.next; ptr != &list->tail; ptr = ptr->next)
+    {
+        task_t *task = element_entry(task_t, node, ptr);
+        
+        // 找到一个剩余的剩余时间片数更大的一个任务，
+        // 并把当前的任务插在这个任务前面
+        if (task->ticks > current->ticks)
+        {
+            anchor = ptr;
+            break;
+        }
+    }
+
+    assert(current->node.next == NULL);
+    assert(current->node.prev == NULL);
+
+    // 插入链表
+    // 插到当前列表的前面
+    list_insert_before(anchor, &current->node);
+
+    // 阻塞状态时睡眠
+    // 插入之后，当前的任务设置为睡眠状态
+    current->state = TASK_SLEEPING;
+
+    schedule(); 
+}
+
+void task_wakeup()
+{
+    assert(!get_interrupt_state());
+
+    //jiffies指的时当前已经过去的时间片数
+    // 从睡眠队列中找到ticks小于或等于jiffies的任务，恢复执行
+    list_t *list = &sleep_list;
+    for(list_node_t *ptr = list->head.next; ptr != &list->tail; )
+    {
+        task_t *task = element_entry(task_t, node, ptr);
+
+        // 小于或等于jiffies的任务可以被唤醒
+        // 所有的剩余时间片数大于当前已经运行的时间片总数的任务都不能被唤醒
+        if (task->ticks > jiffies)
+        {
+            break;
+        }
+
+        // unblock 会将指针清空，唤醒小于jiffies的线程，即唤醒所有应该唤醒的新城
+        ptr = ptr->next;
+
+        task->ticks = 0;
+        task_unblock(task); 
+    }
+}
+
 extern void idle_thread();
 extern void init_thread();
+extern void test_thread();
 
 void task_init()
 {
     list_init(&block_list);
+    list_init(&sleep_list);// 初始化睡眠列表
     task_setup();
 
     idel_task = task_create(idle_thread, "idle", 1, KERNEL_USER);
     task_create(init_thread, "init", 5, NORMAL_USER);// 用户层线程
+    task_create(test_thread, "test", 5, NORMAL_USER);// 用户层线程
 }

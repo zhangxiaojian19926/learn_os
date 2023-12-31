@@ -12,7 +12,7 @@
 
 
 
-typedef u32 target_t(); // 函数地址
+typedef void target_t(); // 函数地址
 
 typedef enum task_state_t
 {
@@ -62,6 +62,10 @@ void task_yield(); // 主动让出cpu
 // 任务枷锁与解锁过程
 void task_block(task_t *task, list_t *blist, task_state_t state);
 void task_unblock(task_t *task);
+
+// 任务休眠与唤醒
+void task_sleep(u32 ms);
+void task_wakeup();
 
 
 #endif
