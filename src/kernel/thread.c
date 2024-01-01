@@ -22,20 +22,20 @@ void idle_thread()
     }
 }
 
-mutex_t mutex;
+spinlock_t lock;
 
 // 1号线程
 void init_thread()
 {
-    mutex_init(&mutex);
+    spin_init(&lock);
     set_interrupt_state(true);
     u32 counter = 0;
 
     while (true)
     {
-        mutex_lock(&mutex);
+        spin_lock(&lock);
         LOGK("init task... %d\n", counter++);
-        mutex_unlock(&mutex);
+        spin_unlock(&lock);
     }
 }
 
@@ -46,8 +46,8 @@ void test_thread()
 
     while (true)
     {
-        mutex_lock(&mutex);
+        spin_lock(&lock);
         LOGK("test task... %d\n", counter++);
-        mutex_unlock(&mutex);
+        spin_unlock(&lock);
     }  
 }
