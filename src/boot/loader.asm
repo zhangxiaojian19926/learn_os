@@ -120,7 +120,7 @@ protected_mode:
     mov eax, 0x20231209 ; 内核魔数，为了兼容grub引导
     mov ebx, ards_count ;ards 数量指针
 
-    jmp dword code_selector:0x10000; 跳转内核执行
+    jmp dword code_selector:0x10040; 跳转内核执行，前64个字节被multiboot2占用
 
     ud2;表示出错
 
