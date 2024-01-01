@@ -5,6 +5,7 @@
 #include <onix/stdlib.h>
 #include <onix/string.h>
 #include <onix/bitmap.h>
+#include <onix/multiboot2.h>
 
 #define ZONE_VALID 1    // ards 可用内存区域
 #define ZONE_RESERVED 2 // ards 不可用区域
@@ -43,14 +44,13 @@ static u32 free_pages = 0;  // 空闲内存页数
 void memory_init(u32 magic, u32 addr)
 {
     u32 count = 0;
-    ards_t *ptr = NULL;
 
     // 魔数校验
     if (magic == ONIX_MAGIC)
     {
         /* code */
         count = *(u32 *)addr;
-        ptr = (ards_t *)(addr + 4);//
+        ards_t *ptr = (ards_t *)(addr + 4);//
 
         // 找到一个比已有更大的一块内存
         for (size_t i = 0; i < count; i++, ptr++)
@@ -63,6 +63,40 @@ void memory_init(u32 magic, u32 addr)
                 memory_base = (u32)ptr->base;
                 memory_size = (u32)ptr->size;
             }
+        }
+    }
+    else if (magic == MULTIBOOT2_MAGIC)
+    {
+        // addr为传进来的物理地址，指定的寄存器传递
+        u32 size = *(unsigned int *)addr;
+        multi_tag_t *tag = (multi_tag_t *) (addr + 8);// 
+
+        LOGK("Announced mbi size 0x%x \n", size);
+        while (tag->type != MULTIBOOT_TAG_TYPE_END)
+        {
+            if (tag->type == MULTIBOOT_TAG_TYPE_MMAP)
+            {
+                break;
+            }
+            // 下一个tag对齐到了8字节
+            tag = (multi_tag_t *)((u32)tag + ((tag->size + 7) & ~7));
+        }
+
+        // 找到对应能用的物理地址起始位置
+        multi_tag_mmap_t *mtag = (multi_tag_mmap_t *)tag;
+        multi_mmap_entry_t *entry = mtag->entries;
+        while ((u32)entry < (u32)tag + tag->size)
+        {
+            LOGK("Memory base 0x%p size:0x%p, type:%d\n",
+                (u32)entry->addr, (u32)entry->len, (u32)entry->type);
+            count++;
+            if (entry->type == ZONE_VALID && entry->len > memory_size)
+            {
+                memory_base = (u32)entry->addr;
+                memory_size = (u32)entry->len;
+            }
+            
+            entry = (multi_mmap_entry_t *)((u32)entry + mtag->entry_size);
         }
     }
     else
