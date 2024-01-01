@@ -33,7 +33,7 @@ void mutex_lock(mutex_t *mutex)
     set_interrupt_state(intr);    
 }
 
-// 解锁
+// 释放信号量
 void mutex_unlock(mutex_t *mutex)
 {
     bool intr = interrupt_disable();
@@ -61,4 +61,52 @@ void mutex_unlock(mutex_t *mutex)
     
     // 恢复之前中断标志
     set_interrupt_state(intr); 
+}
+
+// 自旋锁初始化
+void spin_init(spinlock_t *lock)
+{
+    lock->holder = NULL;
+    lock->repeat = 0;
+    mutex_init(&lock->mutex);
+}
+
+// 尝试持有锁
+void spin_lock(spinlock_t *lock)
+{
+    task_t *current = running_task();
+
+    // 若持有者不是当前线程，则进入，清除上次的持有者，对信号量进行加锁
+    if (lock->holder != current)
+    {
+        mutex_lock(&lock->mutex);
+        lock->holder = current;
+        assert(lock->repeat == 0);// 不等于assert
+        lock->repeat = 1; 
+    }
+    else
+    {
+        lock->repeat++;
+    }  
+}
+
+// 解锁
+void spin_unlock(spinlock_t *lock)
+{
+    task_t *current = running_task();
+    assert(lock->holder == current);
+
+    // 若自旋锁被当前进程重复占用时，这个时候则需要将repeat只为0
+    if (lock->repeat > 1)
+    {
+        lock->repeat--;
+        return;
+    }
+
+    // 只有当repeat减为1才代表当前进程释放一次就够了
+    assert(lock->repeat == 1);
+
+    lock->holder = NULL;
+    lock->repeat = 0;
+    mutex_unlock(&lock->mutex); 
 }
