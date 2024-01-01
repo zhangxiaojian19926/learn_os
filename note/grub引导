@@ -1,0 +1,15 @@
+## grub报错处理
+
+- grub-mkrescue: error: `mformat` invocation failed
+
+    sudo apt-get install mtools
+
+- grub-mkrescue: error: xorriso not found.
+  
+   sudo apt-get install xorriso
+
+- 读不到cdrom的解决办法，原因是grub这个工具安装不对
+
+![Alt text](image.png)
+
+用这条命令解决上面的的问题 **sudo apt-get install grub-pc-bin** 

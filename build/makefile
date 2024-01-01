@@ -2,7 +2,8 @@ BUILD:=.
 SRC:=../src
 ROOT:=.
 
-ENTRYPOINT:=0x10000 #内核起始位置
+MULTIOOT2:=0x10000 #multiboot2 开始位置
+ENTRYPOINT:=$(shell python3 -c "print(f'0x{$(MULTIOOT2) + 64:x}')") # 根据multiboot2的所占用的空间计算当前内核的内存位置
 
 CFLAGS:=-m32 # 32位程序
 CFLAGS+=-fno-builtin # 不需要gcc 内置函数，使用自己编译的
@@ -35,6 +36,13 @@ $(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
+LDFLAGS:= -m elf_i386 \
+		  -static \
+		  -Ttext $(ENTRYPOINT) \
+		  --section-start=.multiboot2=$(MULTIOOT2)
+
+LDFLAGS:=$(strip ${LDFLAGS}) # 让LD参数好看
+
 # 创建kernel.bin文件
 $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/kernel/main.o 	\
@@ -64,7 +72,7 @@ $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 
 	$(shell mkdir -p $(dir $@))
 	# $^ 表示所有依赖文件 $@  目标文件 静态链接elf_i386的可执行文件
-	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT) 
+	ld ${LDFLAGS} $^ -o $@  
 
 # 创建system.bin文件
 $(BUILD)/kernel/system.bin: $(BUILD)/kernel/kernel.bin
@@ -97,6 +105,21 @@ $(BUILD)/img/h16M.img: $(BUILD)/boot/boot.bin \
 # 将system.bin 写入到硬盘中
 	sudo dd if=$(BUILD)/kernel/system.bin of=$@ bs=512 count=200 seek=10 conv=notrunc
 
+$(BUILD)/img/kernel.iso: $(BUILD)/kernel/kernel.bin $(SRC)/utils/grub.cfg
+
+# 新建img目录
+	$(shell mkdir -p $(dir $@))
+# 检查内存是否合法，检查kernel.bin是否是x86的文件
+	grub-file --is-x86-multiboot2 $<
+#创建 iso 目录
+	mkdir -p $(BUILD)/iso/boot/grub
+#拷贝内核文件
+	cp $< $(BUILD)/iso/boot
+#拷贝grub的配置文件
+	cp $(SRC)/utils/grub.cfg $(BUILD)/iso/boot/grub
+#生成 iso 文件
+	grub-mkrescue -o $@ $(BUILD)/iso/
+
 test:$(BUILD)/img/h16M.img
 
 .PHONY: clean
@@ -110,19 +133,33 @@ clean:
 bochs:$(BUILD)/img/h16M.img
 	sudo bochs -f $(BUILD)/bochsrc -unlock
 
+.PHONY:bochsb
+bochsb:$(BUILD)/img/kernel.iso
+	sudo bochs -f $(BUILD)/bochsrc.grub -unlock
+
 QEMU:=sudo qemu-system-i386 \
 			-m 32M \
-			-boot c\
-			-hda $(BUILD)/img/h16M.img \
 			-rtc base=localtime \
+
+QEMU_DISK:=	-boot c\
+			-drive file=$(BUILD)/img/h16M.img,if=ide,index=0,media=disk,format=raw \
+
+QEMU_CDROM:= -boot d\
+			 -drive file=$(BUILD)/img/kernel.iso,media=cdrom \
+
+QEMU_DEBUG:= -s -S
 
 .PHONY:qemu
 qemu:$(BUILD)/img/h16M.img
-	$(QEMU)
+	$(QEMU) $(QEMU_DISK)
 
 .PHONY:qemug
 qemug:$(BUILD)/img/h16M.img
-	$(QEMU) -s -S
+	$(QEMU) $(QEMU_DEBUG)
+
+.PHONY:qemub
+qemub:$(BUILD)/img/kernel.iso
+	$(QEMU) $(QEMU_CDROM) 
 
 $(BUILD)/img/h16M.vmdk:$(BUILD)/img/h16M.img
 	sudo qemu-img convert -O vmdk $< $@
