@@ -64,7 +64,7 @@ void mutex_unlock(mutex_t *mutex)
 }
 
 // 自旋锁初始化
-void spin_init(spinlock_t *lock)
+void lock_init(lock_t *lock)
 {
     lock->holder = NULL;
     lock->repeat = 0;
@@ -72,7 +72,7 @@ void spin_init(spinlock_t *lock)
 }
 
 // 尝试持有锁
-void spin_lock(spinlock_t *lock)
+void lock_acquire(lock_t *lock)
 {
     task_t *current = running_task();
 
@@ -91,7 +91,7 @@ void spin_lock(spinlock_t *lock)
 }
 
 // 解锁
-void spin_unlock(spinlock_t *lock)
+void lock_release(lock_t *lock)
 {
     task_t *current = running_task();
     assert(lock->holder == current);
