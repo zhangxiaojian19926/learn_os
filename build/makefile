@@ -63,6 +63,7 @@ $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/kernel/time.o \
 							$(BUILD)/kernel/rtc.o \
 							$(BUILD)/kernel/memory.o \
+							$(BUILD)/kernel/keyboard.o \
 							$(BUILD)/lib/string.o	\
 							$(BUILD)/lib/bitmap.o	\
 							$(BUILD)/lib/vsprintf.o \

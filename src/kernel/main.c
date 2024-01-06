@@ -15,6 +15,7 @@ extern void memory_test();
 extern void memory_map_init();
 extern void mapping_init();
 extern void syscall_init();
+extern void keyboard_init();
 
 extern void bitmap_test_1();
 extern bool interrupt_disable();
@@ -28,6 +29,7 @@ void kernel_init()
     interrupt_init();// 中断初始化
 
     clock_init();
+    keyboard_init();//初始化键盘
 
     task_init();
     syscall_init();

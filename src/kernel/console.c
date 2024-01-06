@@ -148,7 +148,7 @@ extern void start_beep();
 // 写控制台，将字符写入
 void console_write(char * buf, u32 count)
 {
-    // bool intr = interrupt_disable();
+    bool intr = interrupt_disable();
     char ch;
 
     while (count--)
@@ -213,7 +213,7 @@ void console_write(char * buf, u32 count)
 
     set_cursor();// 根据pos设置光标位置，与屏幕内存位置无光
 
-    // set_interrupt_state(intr); // 产生原子操作
+    set_interrupt_state(intr); // 产生原子操作，保护临界区操作
 }
 
 void console_clear()
