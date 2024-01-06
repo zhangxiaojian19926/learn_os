@@ -6,6 +6,9 @@
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_CTRL_PORT 0x60
 
+#define KEYBOARD_CMD_LED 0xED  // 设置LED状态
+#define KEYBOARD_CMD_ACK 0xFA  // ACK
+
 #define INV 0 // 不可见字符
 
 #define CODE_PRINT_SCREEN_DOWN 0xB7
@@ -229,6 +232,40 @@ static bool extcode_state;  // 扩展码状态
 // SHIFT 键状态
 #define shift_state (keymap[KEY_SHIFT_L][2] || keymap[KEY_SHIFT_R][2])
 
+// 等待缓冲区为空
+static void keyboard_wait()
+{
+    u8 state;
+    do
+    {
+        state = inb(KEYBOARD_CTRL_PORT);
+    } while (state & 0x02); // 读取键盘缓冲区，直到为空
+}
+
+// 键盘相应
+static void keyboard_ack()
+{
+    u8 state;
+    do
+    {
+        state = inb(KEYBOARD_DATA_PORT);
+    } while (state != KEYBOARD_CMD_ACK);
+}
+
+static void set_leds()
+{
+    u8 leds = (capslock_state << 2) | (numlock_state << 1) | scrlock_state;
+    keyboard_wait();
+    // 设置 LED 命令
+    outb(KEYBOARD_DATA_PORT, KEYBOARD_CMD_LED);
+    keyboard_ack();
+
+    keyboard_wait();
+    // 设置 LED 灯状态
+    outb(KEYBOARD_DATA_PORT, leds);
+    keyboard_ack();
+}
+
 void keyboard_handler(int vector)
 {
     assert(vector == 0x21);
@@ -304,6 +341,11 @@ void keyboard_handler(int vector)
         led = true;
     }
 
+    if (true == led)
+    {
+        set_leds();
+    }
+
     // 计算 shift 状态，只有在按下'a' - 'z' 之间的字符才有作用，其他字符不需要做大小写切换
     bool shift = false;
     if (capslock_state && ('a' <= keymap[makecode][0] && keymap[makecode][0] <= 'z'))
@@ -341,6 +383,8 @@ void keyboard_init()
     scrlock_state = false;  // 滚动锁定
     numlock_state = false;  // 数字锁定
     extcode_state = false;  // 扩展码状态
+
+    set_leds();// 初始化灯的状态为灭
 
     set_interrupt_handler(IRQ_KEYBOARD, keyboard_handler);
     set_interrupt_mask(IRQ_KEYBOARD, true);  
