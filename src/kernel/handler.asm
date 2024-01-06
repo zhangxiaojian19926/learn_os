@@ -17,7 +17,7 @@ interrupt_handler_%1:
 
 interrupt_entry:
     
-    xchg bx, bx
+    ; xchg bx, bx
 
     ; 保存上文寄存器
     push ds

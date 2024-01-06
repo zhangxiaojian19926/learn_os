@@ -54,7 +54,7 @@ detect_memory:
 
 
 prepare_protected_mode:
-    xchg bx, bx
+    ; xchg bx, bx
     cli;关闭中断
 
     ; 打开a20线

@@ -25,7 +25,7 @@ void mutex_lock(mutex_t *mutex)
     // 出了while时，一定是无人持有的
     assert(mutex->value == false);
 
-    // 当前线程持有锁
+    // 若为1表示已经持有锁
     mutex->value++;
     assert(mutex->value == true);// ++ 之后的值必须要等于true
 
