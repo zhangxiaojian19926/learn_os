@@ -2,6 +2,9 @@
 #include <onix/io.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
+#include <onix/task.h>
+#include <onix/mutex.h>
+#include <onix/fifo.h>
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_CTRL_PORT 0x60
@@ -223,6 +226,13 @@ static bool scrlock_state;  // 滚动锁定
 static bool numlock_state;  // 数字锁定
 static bool extcode_state;  // 扩展码状态
 
+static lock_t lock; 
+static task_t *waiter;
+
+#define BUFFER_SIZE 64 // 缓冲区大小
+static char buf[BUFFER_SIZE]; // 输入缓冲区
+static fifo_t fifo; // 循环队列
+
 // CTRL 键状态
 #define ctrl_state (keymap[KEY_CTRL_L][2] || keymap[KEY_CTRL_L][3])
 
@@ -374,7 +384,34 @@ void keyboard_handler(int vector)
     if (ch == INV)
         return;
 
-    LOGK("keydown %c \n", ch);
+    // LOGK("keydown %c \n", ch);
+    fifo_put(&fifo, ch); // 将当前输出字符放入队列
+    if (waiter != NULL)
+    {
+        task_unblock(waiter);
+        waiter = NULL;
+    }
+}
+
+// 读取当前输入的字符，
+u32 keyboard_read(char *buf, u32 count)
+{
+    lock_acquire(&lock); // 保证同时只有一个进程读键盘
+
+    int nr = 0;
+    while (nr < count)
+    {
+        while (fifo_empty(&fifo)) // 当队列为空时，一直阻塞要读键盘输入的线程
+        {
+            waiter = running_task();
+            task_block(waiter, NULL, TASK_WAITING);
+        }
+
+        buf[nr++] = fifo_get(&fifo);
+    }
+    
+    lock_release(&lock);
+    return count;
 }
 
 void keyboard_init()
@@ -383,6 +420,10 @@ void keyboard_init()
     scrlock_state = false;  // 滚动锁定
     numlock_state = false;  // 数字锁定
     extcode_state = false;  // 扩展码状态
+
+    fifo_init(&fifo, buf, BUFFER_SIZE);
+    lock_init(&lock);
+    waiter = NULL;
 
     set_leds();// 初始化灯的状态为灭
 

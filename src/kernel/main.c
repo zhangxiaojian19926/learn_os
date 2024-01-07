@@ -16,6 +16,7 @@ extern void memory_map_init();
 extern void mapping_init();
 extern void syscall_init();
 extern void keyboard_init();
+extern void tss_init();
 
 extern void bitmap_test_1();
 extern bool interrupt_disable();
@@ -24,6 +25,7 @@ extern bool set_interrupt_state(bool state);
 
 void kernel_init()
 {
+    tss_init();
     memory_map_init();
     mapping_init();
     interrupt_init();// 中断初始化
