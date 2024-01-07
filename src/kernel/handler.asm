@@ -189,7 +189,7 @@ syscall_handler:
 
     push 0x80 ;向中断处理函数传毒参数中断向量号
 
-    push eax; 第三个参数
+    push edx; 第三个参数
     push ecx; 第二个参数
     push ebx; 第一个参数
 

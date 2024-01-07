@@ -4,6 +4,7 @@
 #include <onix/types.h>
 #include <onix/mutex.h>
 #include <onix/printk.h>
+#include <onix/stdio.h>
 
 // 0号线程
 void idle_thread() 
@@ -34,8 +35,7 @@ static void real_init_thread()
     {
         sleep(100);
         
-        yield(); 
-        // LOGK("%c\n", 'h');
+        printf("ta>>>>>>>>>>>>>>>>>>. %d\n", counter++);
     }
 }
 

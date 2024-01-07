@@ -70,6 +70,7 @@ $(BUILD)/kernel/kernel.bin: $(BUILD)/kernel/start.o \
 							$(BUILD)/lib/stdlib.o	\
 							$(BUILD)/lib/syscall.o	\
 							$(BUILD)/lib/fifo.o	\
+							$(BUILD)/lib/printf.o	\
 							$(BUILD)/lib/list.o	
 
 	$(shell mkdir -p $(dir $@))
@@ -157,7 +158,7 @@ qemu:$(BUILD)/img/h16M.img
 
 .PHONY:qemug
 qemug:$(BUILD)/img/h16M.img
-	$(QEMU) $(QEMU_DEBUG)
+	$(QEMU) $(QEMU_DEBUG) $(QEMU_DISK)
 
 .PHONY:qemub
 qemub:$(BUILD)/img/kernel.iso

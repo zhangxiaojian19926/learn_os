@@ -146,12 +146,13 @@ static void command_del()
 extern void start_beep();
 
 // 写控制台，将字符写入
-void console_write(char * buf, u32 count)
+int32 console_write(char * buf, u32 count)
 {
     bool intr = interrupt_disable();
     char ch;
+    int32 nr = 0;
 
-    while (count--)
+    while (nr++ < count)
     {
         ch = *buf++;
 
