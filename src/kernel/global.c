@@ -74,7 +74,7 @@ void tss_init()
 {
     memset(&tss, 0, sizeof(tss));
 
-    tss.ss0 = KERNEL_DATA_SELECTOR;
+    tss.ss0 = KERNEL_DATA_SELECTOR; // 系统数据段选择子
     tss.iobase = sizeof(tss);
 
     descriptor_t *desc = gdt + KERNEL_TSS_IDX;

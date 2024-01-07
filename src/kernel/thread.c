@@ -25,6 +25,20 @@ void idle_thread()
 
 extern u32 keyboard_read(char *buf, u32 count);
 
+static void real_init_thread()
+{
+    u32 counter = 0;
+
+    char ch;
+    while (true)
+    {
+        sleep(100);
+        
+        yield(); 
+        // LOGK("%c\n", 'h');
+    }
+}
+
 // 1号线程
 void init_thread()
 {
@@ -34,10 +48,13 @@ void init_thread()
     char ch;
     while (true)
     {
-        bool intr = interrupt_disable();
-        keyboard_read(&ch, 1);
-        printk("%c", ch); // 读取字符回显到屏幕上
-        set_interrupt_state(intr);
+        // bool intr = interrupt_disable();
+        // keyboard_read(&ch, 1);
+        // printk("%c", ch); // 读取字符回显到屏幕上
+        // set_interrupt_state(intr);
+
+        char tmp[100];
+        task_to_user_mode(real_init_thread);
     }
 }
 
