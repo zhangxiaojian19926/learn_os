@@ -5,6 +5,7 @@
 #include <onix/mutex.h>
 #include <onix/printk.h>
 #include <onix/stdio.h>
+#include <onix/arena.h>
 
 // 0号线程
 void idle_thread() 
@@ -48,13 +49,13 @@ void init_thread()
     char ch;
     while (true)
     {
-        // bool intr = interrupt_disable();
-        // keyboard_read(&ch, 1);
-        // printk("%c", ch); // 读取字符回显到屏幕上
-        // set_interrupt_state(intr);
+        bool intr = interrupt_disable();
+        keyboard_read(&ch, 1);
+        printk("%c", ch); // 读取字符回显到屏幕上
+        set_interrupt_state(intr);
 
-        char tmp[100];
-        task_to_user_mode(real_init_thread);
+        // char tmp[100];
+        // task_to_user_mode(real_init_thread);
     }
 }
 
@@ -65,6 +66,19 @@ void test_thread()
 
     while (true)
     {
+        void *ptr = kmalloc(1200);
+        LOGK("kmalloc %#x\n", ptr);
+        kfree(ptr);
+        LOGK("kmalloc %#x\n", ptr);
+
+        void *ptr1 = kmalloc(1024);
+        LOGK("kmalloc %#x\n", ptr1);
+        kfree(ptr1);
+
+        void *ptr3 = kmalloc(54);
+        LOGK("kmalloc %#x\n", ptr3);
+        kfree(ptr3);
+
         sleep(709);
     }  
 }

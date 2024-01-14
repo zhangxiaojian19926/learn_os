@@ -11,6 +11,7 @@ extern void task_init();
 extern void hang();
 extern void time_init();
 extern void rtc_init();
+extern void arena_init();
 extern void memory_test();
 extern void memory_map_init();
 extern void mapping_init();
@@ -28,6 +29,7 @@ void kernel_init()
     tss_init();
     memory_map_init();
     mapping_init();
+    arena_init();
     interrupt_init();// 中断初始化
 
     clock_init();
